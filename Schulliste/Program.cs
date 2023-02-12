@@ -35,15 +35,22 @@ namespace Schulliste
 
         static string[] Benutzernamen(bool domain)
         {
+
             string output = runCmd("net", "user" + (domain ? " /domain" : ""));
 
             Console.WriteLine(output);
 
             string[] outputLines = output.Split("\n");
+
             // Entferne alle Leerzeichen vorne und hinten von jedem Eintrag
             for (int i = 0; i < outputLines.Length; i++)
             {
                 outputLines[i] = outputLines[i].Trim();
+            }
+
+            if (outputLines.Length < 4)
+            {
+                return new string[] { };
             }
 
             // Überspringe alle leeren Einträge
@@ -75,7 +82,8 @@ namespace Schulliste
             p.Start();
             string output = p.StandardOutput.ReadToEnd();
             p.WaitForExit();
-            return output;
+            if (p.ExitCode == 0) return output;
+            else return "\n\n\n\n\n";
         }
         static void AddElementsToArray(ref string[] originalArray, string[] elementsToAdd)
         {
