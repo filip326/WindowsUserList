@@ -32,11 +32,61 @@ namespace Schulliste
             } while (key.Key != ConsoleKey.Enter);
 
             string[] usernames = Benutzernamen(selection == 0);
+
+            string[] daten = new string[] { };
+
             foreach (string username in usernames)
             {
                 string vorname = BenutzerName(username, selection == 0);
-                Console.WriteLine(vorname);
+                string klasse = BenutzerKlasse(username, selection == 0);
+                AddElementsToArray(ref daten, (vorname + ";" + klasse + '/').Split('/'));
             }
+            for (int i = 0; i < daten.Length; i++)
+            {
+                daten[i] = daten[i].Trim();
+            }
+            Console.WriteLine("Pfad zur Output TextDatei: ");
+
+            string pfad = Console.ReadLine() ?? "Error";
+            File.WriteAllLines(pfad, daten);
+        }
+
+        static string BenutzerKlasse(string username, bool domain) // Gibt die Klasse des Benutzers zurück
+        {
+            string output = runCmd("net", "user " + username + (domain ? " /domain" : ""));
+            // Console.WriteLine(output);
+
+            string[] outputLines = output.Split("\n");
+            // Entferne alle Leerzeichen vorne und hinten von jedem Eintrag
+            for (int i = 0; i < outputLines.Length; i++)
+            {
+                outputLines[i] = outputLines[i].Trim();
+            }
+
+            // Überspringe alle leeren Einträge
+            outputLines = outputLines.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+
+            outputLines = outputLines.Skip(19).Take(outputLines.Length - (outputLines.Length - 1)).ToArray();
+
+            string userinfo = new string("");
+            string[] userinfo_split = outputLines[0].Split(' ');
+            for (int i = 0; i < userinfo_split.Length; i++)
+            {
+                userinfo_split[i] = userinfo_split[i].Trim();
+                userinfo += userinfo_split[i];
+            }
+
+            if (userinfo.Length > "Globale Gruppenmitgliedschaften".ToString().Length)
+            {
+                userinfo = userinfo.Substring("Globale Gruppenmitgliedschaften".ToString().Length);
+            }
+            else
+            {
+                userinfo = "Keine Klasse angegeben";
+            }
+            // ToDo
+            // Klasse extrahieren.
+            return userinfo;
         }
 
         static string BenutzerName(string username, bool domain) // Gibt den Vollständigen Namen des Benutzers zurück
@@ -62,7 +112,7 @@ namespace Schulliste
             for (int i = 0; i < userinfo_split.Length; i++)
             {
                 userinfo_split[i] = userinfo_split[i].Trim();
-                userinfo += userinfo_split[i]; 
+                userinfo += userinfo_split[i];
             }
 
             if (userinfo.Length > "VollständigerName".ToString().Length)
