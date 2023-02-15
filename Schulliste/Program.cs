@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
+using System.Linq.Expressions;
 
 namespace Schulliste
 {
@@ -30,14 +31,57 @@ namespace Schulliste
 
             } while (key.Key != ConsoleKey.Enter);
 
-            Benutzernamen(selection == 0);
+            string[] usernames = Benutzernamen(selection == 0);
+            foreach (string username in usernames)
+            {
+                string vorname = BenutzerName(username, selection == 0);
+                Console.WriteLine(vorname);
+            }
+        }
+
+        static string BenutzerName(string username, bool domain) // Gibt den Vollständigen Namen des Benutzers zurück
+        {
+            string output = runCmd("net", "user " + username + (domain ? " /domain" : ""));
+            // Console.WriteLine(output);
+
+            string[] outputLines = output.Split("\n");
+            // Entferne alle Leerzeichen vorne und hinten von jedem Eintrag
+            for (int i = 0; i < outputLines.Length; i++)
+            {
+                outputLines[i] = outputLines[i].Trim();
+            }
+
+            // Überspringe alle leeren Einträge
+            outputLines = outputLines.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+
+            outputLines = outputLines.Skip(1).Take(outputLines.Length - (outputLines.Length - 1)).ToArray();
+
+            string userinfo = new string("");
+
+            string[] userinfo_split = outputLines[0].Split(' ');
+            for (int i = 0; i < userinfo_split.Length; i++)
+            {
+                userinfo_split[i] = userinfo_split[i].Trim();
+                userinfo += userinfo_split[i]; 
+            }
+
+            if (userinfo.Length > "VollständigerName".ToString().Length)
+            {
+                userinfo = userinfo.Substring("VollständigerName".ToString().Length);
+            }
+            else
+            {
+                userinfo = "Kein Name angegeben";
+            }
+
+            return userinfo;
         }
 
         static string[] Benutzernamen(bool domain)
         {
             string output = runCmd("net", "user" + (domain ? " /domain" : ""));
 
-            Console.WriteLine(output);
+            // Console.WriteLine(output);
 
             string[] outputLines = output.Split("\n");
             // Entferne alle Leerzeichen vorne und hinten von jedem Eintrag
@@ -59,10 +103,7 @@ namespace Schulliste
                 AddElementsToArray(ref usernames, line.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             }
 
-
-            Console.WriteLine("Benutzernamen: " + string.Join(", ", usernames));
-
-            return new string[] {};
+            return usernames;
         }
         static public string runCmd(string cmd, string cmdArg)
         {
