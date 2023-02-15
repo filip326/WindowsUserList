@@ -37,18 +37,39 @@ namespace Schulliste
 
             foreach (string username in usernames)
             {
-                string vorname = BenutzerName(username, selection == 0);
-                string klasse = BenutzerKlasse(username, selection == 0);
-                AddElementsToArray(ref daten, (vorname + ";" + klasse + '/').Split('/'));
+                try
+                {
+                    string vorname = BenutzerName(username, selection == 0);
+                    string klasse = BenutzerKlasse(username, selection == 0);
+                    AddElementsToArray(ref daten, (vorname + ";" + klasse + '/').Split('/'));
+                } catch (Exception err)
+                {
+                    Console.WriteLine(err);
+                    continue;
+                }
             }
             for (int i = 0; i < daten.Length; i++)
             {
-                daten[i] = daten[i].Trim();
+                try
+                {
+                    daten[i] = daten[i].Trim();
+                }
+                catch (Exception err)
+                {
+                    Console.WriteLine(err);
+                    continue;
+                }
             }
-            Console.WriteLine("Pfad zur Output TextDatei: ");
+            try
+            {
+                Console.WriteLine("Pfad zur Output TextDatei: ");
 
-            string pfad = Console.ReadLine() ?? "Error";
-            File.WriteAllLines(pfad, daten);
+                string pfad = Console.ReadLine() ?? "Error";
+                File.WriteAllLines(pfad, daten);
+            } catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
         }
 
         static string BenutzerKlasse(string username, bool domain) // Gibt die Klasse des Benutzers zurück
