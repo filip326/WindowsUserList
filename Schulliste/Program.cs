@@ -12,7 +12,7 @@ namespace Schulliste
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Domänen oder lokale Benutzer abfragen? ");
+            Console.WriteLine("Domänen oder lokale Benutzer abfragen?");
             Console.WriteLine("* Domänenbenutzer");
             Console.WriteLine("  lokale Benutzer");
 
