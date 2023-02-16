@@ -11,7 +11,8 @@ namespace Schulliste
 {
     class Program
     {
-        static void Main(string[] args)
+
+        static async Task Main(string[] args)
         {
             Console.WriteLine("Domänen oder lokale Benutzer abfragen?");
             Console.WriteLine("* Domänenbenutzer");
@@ -33,43 +34,40 @@ namespace Schulliste
 
             string[] usernames = Benutzernamen(selection == 0);
 
-            string[] daten = new string[] { };
+            User[] users = usernames.Select(u => new User(u, selection == 0)).ToArray();
 
-            foreach (string username in usernames)
-            {
-                try
-                {
-                    string vorname = BenutzerName(username, selection == 0);
-                    string klasse = BenutzerKlasse(username, selection == 0);
-                    AddElementsToArray(ref daten, (vorname + ";" + klasse + '/').Split('/'));
-                } catch (Exception err)
-                {
-                    Console.WriteLine(err);
-                    continue;
-                }
-            }
-            for (int i = 0; i < daten.Length; i++)
-            {
-                try
-                {
-                    daten[i] = daten[i].Trim();
-                }
-                catch (Exception err)
-                {
-                    Console.WriteLine(err);
-                    continue;
-                }
-            }
-            try
-            {
-                Console.WriteLine("Pfad zur Output TextDatei: ");
+            Console.WriteLine("Waiting 10 sec. for data parsing:\n");
 
-                string pfad = Console.ReadLine() ?? "Error";
-                File.WriteAllLines(pfad, daten);
-            } catch (Exception err)
+            for (int i = 1; i<= 10; i++)
             {
-                Console.WriteLine(err);
+                Console.CursorTop--;
+                Console.WriteLine(loadingBar(i, 10));
+                Thread.Sleep(1000);
             }
+
+            Console.WriteLine("Parsing data... This might take a while...\n");
+
+            for (int i = 0; i < users.Length; i++)
+            {
+                Console.CursorTop--;
+                Console.Write(new String(' ', Console.WindowWidth));
+                Console.CursorLeft = 0;
+                Console.WriteLine($"Parsing {users[i].username}");
+                Console.Write(new String(' ', Console.WindowWidth));
+                Console.CursorLeft = 0;
+                Console.WriteLine(loadingBar(i, users.Length));
+                Console.CursorTop-= 2;
+                Console.CursorLeft = $"Parsing {users[i].username}".Length;
+                await users[i].waitforReady();
+                Thread.Sleep(500);
+                Console.WriteLine($" ... Done");
+                Console.WriteLine(loadingBar(i, users.Length));
+            }
+
+            Console.CursorTop--;
+            Console.WriteLine(loadingBar(users.Length, users.Length));
+
+
         }
 
         static string BenutzerKlasse(string username, bool domain) // Gibt die Klasse des Benutzers zurück
@@ -202,6 +200,14 @@ namespace Schulliste
             int originalLength = originalArray.Length;
             Array.Resize(ref originalArray, originalLength + elementsToAdd.Length);
             Array.Copy(elementsToAdd, 0, originalArray, originalLength, elementsToAdd.Length);
+        }
+
+        static string loadingBar(double progress, double goal=100)
+        {
+            string progressString = " " + progress.ToString() + " / " + goal.ToString() + " ";
+            int width = Console.WindowWidth - 6 - progressString.Length;
+            int filledPart = Convert.ToInt32(progress / goal * width);
+            return " [" + new String('#', filledPart) + new String('_', width - filledPart) + "] " + progressString;
         }
     }
 }
